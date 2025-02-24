@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch & Listen Together</title>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #player { margin: 20px auto; width: 80%; height: 400px; }
+        #chat { margin-top: 20px; }
+        #messages { height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+        input, button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Watch & Listen Together</h1>
+    <input type="text" id="videoUrl" placeholder="Enter YouTube URL" />
+    <button onclick="loadVideo()">Load Video</button>
+    <div id="player"></div>
+    
+    <div id="chat">
+        <h2>Chat</h2>
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Type a message" />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    
+    <script>
+        let player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '400',
+                width: '80%',
+                videoId: ''
+            });
+        }
+
+        function loadVideo() {
+            const url = document.getElementById('videoUrl').value;
+            const videoId = url.split('v=')[1].split('&')[0];
+            player.loadVideoById(videoId);
+        }
+        
+        // Simple peer-to-peer chat
+        const peer = new SimplePeer({ initiator: location.hash === '#host', trickle: false });
+        const messagesDiv = document.getElementById('messages');
+        
+        peer.on('signal', data => {
+            console.log('SIGNAL', JSON.stringify(data));
+        });
+        
+        peer.on('connect', () => {
+            console.log('Connected to peer!');
+        });
+        
+        peer.on('data', data => {
+            const message = document.createElement('p');
+            message.textContent = data;
+            messagesDiv.appendChild(message);
+        });
+        
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            peer.send(message);
+            
+            const messageElement = document.createElement('p');
+            messageElement.textContent = `You: ${message}`;
+            messagesDiv.appendChild(messageElement);
+            
+            messageInput.value = '';
+        }
+    </script>
+</body>
+</html>
